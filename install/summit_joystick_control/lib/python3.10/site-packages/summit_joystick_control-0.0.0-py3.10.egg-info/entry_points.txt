@@ -1,3 +1,0 @@
-[console_scripts]
-joystick_controller = summit_joystick_control.joystick_controller:main
-

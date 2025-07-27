@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
@@ -20,7 +22,7 @@ class JoystickControl(Node):
         self.last_button_state = 0
 
         # Desired scaling from joystick [-1,1] → [-3,3]
-        self.linear_scale = 3.0
+        self.linear_scale = 2.0
         self.angular_scale = 3.0
 
     def joy_callback(self, msg):
@@ -39,10 +41,9 @@ class JoystickControl(Node):
         twist = Twist()
 
         if self.enabled:
-            amplify_factor = 6  # since 0.17 * 6 ≈ 1.0
 
-            twist.linear.x = self.linear_scale * axis_linear * amplify_factor
-            twist.angular.z = self.angular_scale * axis_angular * amplify_factor
+            twist.linear.x = self.linear_scale * axis_linear 
+            twist.angular.z = self.angular_scale * axis_angular 
 
             # Debug output
             self.get_logger().info(f"[ENABLED] Joy: lin={axis_linear:.2f} ang={axis_angular:.2f} → cmd_vel: x={twist.linear.x:.2f}, z={twist.angular.z:.2f}")
