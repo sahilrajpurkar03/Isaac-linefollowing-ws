@@ -1,0 +1,18 @@
+running develop
+running egg_info
+writing summit_joystick_control.egg-info/PKG-INFO
+writing dependency_links to summit_joystick_control.egg-info/dependency_links.txt
+writing entry points to summit_joystick_control.egg-info/entry_points.txt
+writing requirements to summit_joystick_control.egg-info/requires.txt
+writing top-level names to summit_joystick_control.egg-info/top_level.txt
+reading manifest file 'summit_joystick_control.egg-info/SOURCES.txt'
+writing manifest file 'summit_joystick_control.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/rajpurkar/Isaac_Project/roboconLidar_ws/install/summit_joystick_control/lib/python3.10/site-packages/summit-joystick-control.egg-link (link to .)
+
+Installed /home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control
+running symlink_data
+symbolically linking /home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control/resource/summit_joystick_control -> /home/rajpurkar/Isaac_Project/roboconLidar_ws/install/summit_joystick_control/share/ament_index/resource_index/packages
+symbolically linking /home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control/package.xml -> /home/rajpurkar/Isaac_Project/roboconLidar_ws/install/summit_joystick_control/share/summit_joystick_control
+symbolically linking /home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control/launch/joystick_launch.py -> /home/rajpurkar/Isaac_Project/roboconLidar_ws/install/summit_joystick_control/share/summit_joystick_control/launch
+symbolically linking /home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control/config/teleop_joy.yaml -> /home/rajpurkar/Isaac_Project/roboconLidar_ws/install/summit_joystick_control/share/summit_joystick_control/config

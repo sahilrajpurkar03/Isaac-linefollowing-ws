@@ -1,0 +1,20 @@
+[0.770s] Invoking command in '/home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control': PYTHONPATH=/home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/rajpurkar/Isaac_Project/roboconLidar_ws/install/summit_joystick_control/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control/build --no-deps symlink_data --force
+[1.109s] running develop
+[1.371s] running egg_info
+[1.372s] writing summit_joystick_control.egg-info/PKG-INFO
+[1.372s] writing dependency_links to summit_joystick_control.egg-info/dependency_links.txt
+[1.372s] writing entry points to summit_joystick_control.egg-info/entry_points.txt
+[1.372s] writing requirements to summit_joystick_control.egg-info/requires.txt
+[1.373s] writing top-level names to summit_joystick_control.egg-info/top_level.txt
+[1.375s] reading manifest file 'summit_joystick_control.egg-info/SOURCES.txt'
+[1.379s] writing manifest file 'summit_joystick_control.egg-info/SOURCES.txt'
+[1.379s] running build_ext
+[1.379s] Creating /home/rajpurkar/Isaac_Project/roboconLidar_ws/install/summit_joystick_control/lib/python3.10/site-packages/summit-joystick-control.egg-link (link to .)
+[1.380s] 
+[1.380s] Installed /home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control
+[1.380s] running symlink_data
+[1.380s] symbolically linking /home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control/resource/summit_joystick_control -> /home/rajpurkar/Isaac_Project/roboconLidar_ws/install/summit_joystick_control/share/ament_index/resource_index/packages
+[1.380s] symbolically linking /home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control/package.xml -> /home/rajpurkar/Isaac_Project/roboconLidar_ws/install/summit_joystick_control/share/summit_joystick_control
+[1.380s] symbolically linking /home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control/launch/joystick_launch.py -> /home/rajpurkar/Isaac_Project/roboconLidar_ws/install/summit_joystick_control/share/summit_joystick_control/launch
+[1.380s] symbolically linking /home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control/config/teleop_joy.yaml -> /home/rajpurkar/Isaac_Project/roboconLidar_ws/install/summit_joystick_control/share/summit_joystick_control/config
+[1.406s] Invoked command in '/home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control' returned '0': PYTHONPATH=/home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/rajpurkar/Isaac_Project/roboconLidar_ws/install/summit_joystick_control/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/rajpurkar/Isaac_Project/roboconLidar_ws/build/summit_joystick_control/build --no-deps symlink_data --force
