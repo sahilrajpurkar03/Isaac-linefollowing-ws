@@ -58,7 +58,7 @@ class WhiteLineFollower(Node):
                 k_p = 0.004
                 twist.angular.z = k_p * error  # Turning depends on vertical misalignment
 
-                base_speed = 1.2
+                base_speed = 1.5
                 max_deviation = height / 2
                 twist.linear.x = base_speed * (1 - min(abs(error) / max_deviation, 0.8))
 
