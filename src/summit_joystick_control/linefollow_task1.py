@@ -128,7 +128,7 @@ class WhiteLineFollower(Node):
         contours, _ = cv2.findContours(roi, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         junction_contour_count = 0
-        min_junction_area = 10000
+        min_junction_area = 4000
 
         for cnt in contours:
             if cv2.contourArea(cnt) > min_junction_area:
