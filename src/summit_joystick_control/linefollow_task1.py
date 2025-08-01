@@ -56,6 +56,10 @@ class WhiteLineFollower(Node):
         self.current_yaw = None
 
         self.state = 'FOLLOW_LINE'
+        self.junction_detected = False
+        self.junction_crossing_timer = None
+        self.junction_cross_count = 0
+
 
     # ========== CALLBACKS ==========
     def front_callback(self, msg):
@@ -63,7 +67,7 @@ class WhiteLineFollower(Node):
         self.process_front_image()
 
     def left_callback(self, msg):
-        if self.state == 'TURNING':
+        if self.state == 'TURNING'or self.junction_detected:
             return  # Ignore while turning
 
         self.left_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
@@ -77,7 +81,7 @@ class WhiteLineFollower(Node):
 
 
     def right_callback(self, msg):
-        if self.state == 'TURNING':
+        if self.state == 'TURNING'or self.junction_detected:
             return  # Ignore while turning
 
         self.right_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
@@ -117,11 +121,50 @@ class WhiteLineFollower(Node):
                 return thresh_color, True
 
         return thresh_color, False
+    
+    def detect_junction(self, thresh_img):
+        height, width = thresh_img.shape[:2]
+        roi = thresh_img[int(height*0.6):height, :]
+        contours, _ = cv2.findContours(roi, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        junction_contour_count = 0
+        min_junction_area = 10000
+
+        for cnt in contours:
+            if cv2.contourArea(cnt) > min_junction_area:
+                junction_contour_count += 1
+
+        if junction_contour_count >= 2 and not self.junction_detected:
+            self.junction_detected = True
+            self.get_logger().info("🚦 Junction detected! Pausing side detections.")
+
+            # Start a timer to resume side detections after some time (e.g., 3 seconds)
+            if self.junction_crossing_timer is None:
+                self.junction_crossing_timer = self.create_timer(5.0, self.end_junction_crossing)
+
+            return True
+        return False
+    
+    def end_junction_crossing(self):
+        self.junction_detected = False
+        self.junction_crossing_timer.cancel()
+        self.junction_crossing_timer = None
+        self.junction_cross_count += 1
+        self.get_logger().info(f"✅ Junction crossed count: {self.junction_cross_count}")
+
+        # if self.junction_cross_count >= 3:
+        #     self.get_logger().info("⛔ Passed 2 junctions, stopping robot.")
+        #     self.cmd_vel_pub.publish(Twist())  # Stop robot
 
 
     def process_front_image(self):
         if self.front_image is None:
             return
+        
+        # if self.junction_cross_count >= 3:
+        #     self.get_logger().info("⛔ Junction limit reached. Stopping line following.")
+        #     self.cmd_vel_pub.publish(Twist())  # Stop robot
+        #     return        
 
         if self.state == 'TURNING':
             # During turning, ignore front line following, just do turn logic
@@ -138,6 +181,8 @@ class WhiteLineFollower(Node):
         _, thresh = cv2.threshold(gray, 220, 255, cv2.THRESH_BINARY)
         thresh_color = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        self.detect_junction(thresh)
 
         if contours:
             self.front_line_visible = True
