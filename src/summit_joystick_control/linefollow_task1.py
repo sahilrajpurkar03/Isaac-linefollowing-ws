@@ -2,11 +2,14 @@
 
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, Imu
 from geometry_msgs.msg import Twist
 from cv_bridge import CvBridge
 import cv2
 import numpy as np
+import math
+np.float = float  # temporary fix for transforms3d compatibility
+from tf_transformations import euler_from_quaternion
 
 
 class WhiteLineFollower(Node):
@@ -19,6 +22,7 @@ class WhiteLineFollower(Node):
         self.create_subscription(Image, '/R2_front_rgb', self.front_callback, 10)
         self.create_subscription(Image, '/R2_left_rgb', self.left_callback, 10)
         self.create_subscription(Image, '/R2_right_rgb', self.right_callback, 10)
+        self.create_subscription(Imu, '/R2_imu', self.imu_callback, 10)
 
         self.cmd_vel_pub = self.create_publisher(Twist, '/R2_cmd_vel', 10)
         self.timer = self.create_timer(0.1, self.check_line_lost)
@@ -45,28 +49,57 @@ class WhiteLineFollower(Node):
         self.left_line_visible = False
         self.right_line_visible = False
 
-        # Turning mode
-        self.turning = None  # 'left', 'right', or None
+        # Turning state
+        self.turning = None  # 'left' or 'right'
+        self.turning_in_progress = False
+        self.target_yaw = None
+        self.current_yaw = None
 
+        self.state = 'FOLLOW_LINE'
+
+    # ========== CALLBACKS ==========
     def front_callback(self, msg):
         self.front_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         self.process_front_image()
 
     def left_callback(self, msg):
+        if self.state == 'TURNING':
+            return  # Ignore while turning
+
         self.left_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         self.left_detect, self.left_line_visible = self.process_side_image(self.left_image)
 
-        if self.left_line_visible and self.turning is None:
+        if self.left_line_visible and self.state == 'FOLLOW_LINE':
+            self.get_logger().info('Left line detected. Preparing to turn left 90 degrees.')
+            self.state = 'TURNING'
             self.turning = 'left'
-            self.get_logger().info('Left line detected, starting turn left.')
+            self.start_turn('left')
+
 
     def right_callback(self, msg):
+        if self.state == 'TURNING':
+            return  # Ignore while turning
+
         self.right_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         self.right_detect, self.right_line_visible = self.process_side_image(self.right_image)
 
-        if self.right_line_visible and self.turning is None:
+        if self.right_line_visible and self.state == 'FOLLOW_LINE':
+            self.get_logger().info('Right line detected. Preparing to turn right 90 degrees.')
+            self.state = 'TURNING'
             self.turning = 'right'
-            self.get_logger().info('Right line detected, starting turn right.')
+            self.start_turn('right')
+
+    def imu_callback(self, msg):
+        orientation_q = msg.orientation
+        _, _, yaw = euler_from_quaternion([
+            orientation_q.x,
+            orientation_q.y,
+            orientation_q.z,
+            orientation_q.w
+        ])
+        self.current_yaw = yaw
+
+    # ========== IMAGE PROCESSING ==========
 
     def process_side_image(self, cv_image):
         gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
@@ -75,13 +108,29 @@ class WhiteLineFollower(Node):
 
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+        min_area = 50000  # ⬅️ Increase this if still too sensitive
+
         if contours:
             largest = max(contours, key=cv2.contourArea)
-            cv2.drawContours(thresh_color, [largest], -1, (0, 255, 0), 2)
-            return thresh_color, True
+            if cv2.contourArea(largest) > min_area:
+                cv2.drawContours(thresh_color, [largest], -1, (0, 255, 0), 2)
+                return thresh_color, True
+
         return thresh_color, False
 
+
     def process_front_image(self):
+        if self.front_image is None:
+            return
+
+        if self.state == 'TURNING':
+            # During turning, ignore front line following, just do turn logic
+            self.execute_turn_to_target()
+            # Optionally, show blank or turning visualization
+            blank_img = np.zeros_like(self.front_image)
+            self.show_combined_view(blank_img)
+            return
+
         cv_image = self.front_image.copy()
         height, width, _ = cv_image.shape
 
@@ -94,16 +143,14 @@ class WhiteLineFollower(Node):
             self.front_line_visible = True
             self.last_seen_time = self.get_clock().now()
 
-            # If front sees the line again, stop turning
             if self.turning is not None:
-                self.get_logger().info(f'Front line detected. Stopping turn: {self.turning}')
+                self.get_logger().info(f'Front line detected again. Cancelling turn: {self.turning}')
             self.turning = None
         else:
             self.front_line_visible = False
 
-        # Decide behavior
-        if self.turning is not None:
-            self.execute_turn()
+        if self.turning_in_progress:
+            self.execute_turn_to_target()
         elif self.front_line_visible:
             self.execute_line_follow(thresh_color)
         else:
@@ -111,13 +158,62 @@ class WhiteLineFollower(Node):
 
         self.show_combined_view(thresh_color)
 
-    def execute_turn(self):
+
+    # ========== TURNING LOGIC ==========
+
+    def normalize_angle(self, angle):
+        return math.atan2(math.sin(angle), math.cos(angle))
+
+    def start_turn(self, direction):
+        if self.current_yaw is None:
+            self.get_logger().warn("IMU data not available yet!")
+            return
+
+        self.turning_in_progress = True
+        if direction == 'right':
+            angle_offset = -math.radians(80)  # Right = clockwise = negative
+        else:
+            angle_offset = math.radians(80)   # Left = counter-clockwise = positive
+
+        self.target_yaw = self.normalize_angle(self.current_yaw + angle_offset)
+
+        self.get_logger().info(
+            f'Starting 90-degree turn to {direction}. '
+            f'Current yaw: {math.degrees(self.current_yaw):.2f}°, '
+            f'Target yaw: {math.degrees(self.target_yaw):.2f}°'
+        )
+
+    def execute_turn_to_target(self):
+        if self.current_yaw is None or self.target_yaw is None:
+            return
+
+        error = self.normalize_angle(self.target_yaw - self.current_yaw)
         twist = Twist()
-        if self.turning == 'left':
-            twist.angular.z = -4.0
-        elif self.turning == 'right':
-            twist.angular.z = 4.0
-        self.cmd_vel_pub.publish(twist)
+
+        error_deg = math.degrees(error)
+        yaw_deg = math.degrees(self.current_yaw)
+        target_deg = math.degrees(self.target_yaw)
+
+        if abs(error) > math.radians(2):  # ~2 degree threshold
+            twist.angular.z = -3.0 if error > 0 else 3.0
+            self.get_logger().info(
+                f"Turning... Current yaw: {yaw_deg:.2f}°, "
+                f"Target: {target_deg:.2f}°, "
+                f"Error: {error_deg:.2f}°"
+            )
+            self.cmd_vel_pub.publish(twist)
+        else:
+            self.get_logger().info(
+                f"Completed 90-degree turn to {self.turning}. "
+                f"Final yaw: {yaw_deg:.2f}°"
+            )
+            self.turning_in_progress = False
+            self.turning = None
+            self.target_yaw = None
+            self.state = 'FOLLOW_LINE'  # back to line following
+            self.cmd_vel_pub.publish(Twist())  # Stop turning
+
+    # ========== LINE FOLLOWING ==========
 
     def execute_line_follow(self, display_img):
         height, _ = display_img.shape[:2]
@@ -153,7 +249,11 @@ class WhiteLineFollower(Node):
                 cv2.putText(display_img, f"Error: {error}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
                             0.7, (0, 255, 255), 2)
 
+                self.get_logger().info(f'Line follow: error={error}, angular_z={angular_z:.2f}, linear_x={twist.linear.x:.2f}')
+
         self.cmd_vel_pub.publish(twist)
+
+    # ========== VISUAL DEBUG ==========
 
     def show_combined_view(self, front_display):
         def resize_and_label(img, label, size):
@@ -179,7 +279,6 @@ class WhiteLineFollower(Node):
         cv2.waitKey(1)
 
     def check_line_lost(self):
-        # Optional safety timeout
         time_since_seen = self.get_clock().now() - self.last_seen_time
         if time_since_seen.nanoseconds > 1.0 * 1e9 and self.front_line_visible is False:
             self.cmd_vel_pub.publish(Twist())
