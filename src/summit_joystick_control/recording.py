@@ -9,7 +9,7 @@ import os
 from datetime import datetime
 
 class DualCameraRecorder(Node):
-    def __init__(self, record_r1=True, record_r2=True):
+    def __init__(self, record_r1=True, record_r2=True, record_arena=True):
         super().__init__('dual_camera_recorder')
 
         self.bridge = CvBridge()
@@ -20,6 +20,7 @@ class DualCameraRecorder(Node):
         # Flags for recording
         self.record_r1 = record_r1
         self.record_r2 = record_r2
+        self.record_arena = record_arena
 
         # Timestamp string for filenames
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
@@ -29,6 +30,7 @@ class DualCameraRecorder(Node):
         self.writer_r1_cam2 = None
         self.writer_r2_cam1 = None
         self.writer_r2_cam2 = None
+        self.writer_arena_cam = None
 
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 
@@ -53,6 +55,14 @@ class DualCameraRecorder(Node):
             self.create_subscription(Image, '/R2_camera1', self.r2_camera1_callback, 10)
             self.create_subscription(Image, '/R2_camera2', self.r2_camera2_callback, 10)
             self.get_logger().info(f"Recording R2 cameras to:\n  {r2_cam1_path}\n  {r2_cam2_path}")
+
+        if self.record_arena:
+            arena_cam_filename = f"{timestamp}_Arena_camera.mp4"
+            arena_cam_path = os.path.join(self.output_dir, arena_cam_filename)
+            self.writer_arena_cam = cv2.VideoWriter(arena_cam_path, fourcc, 30.0, (self.width, self.height))
+            self.create_subscription(Image, '/Rec_camera', self.arena_cam_callback, 10)
+            self.get_logger().info(f"\nRecording Arena_camera to:\n  {r2_cam2_path}")
+
 
     # Callbacks for R1
     def r1_camera1_callback(self, msg):
@@ -80,6 +90,14 @@ class DualCameraRecorder(Node):
             frame_resized = cv2.resize(frame, (self.width, self.height))
             self.writer_r2_cam2.write(frame_resized)
 
+    # Callbacks for Arena
+    def arena_cam_callback(self, msg):
+        if self.writer_arena_cam is not None:
+            frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            frame_resized = cv2.resize(frame, (self.width, self.height))
+            self.writer_arena_cam.write(frame_resized)
+
+
     def destroy_node(self):
         if self.writer_r1_cam1:
             self.writer_r1_cam1.release()
@@ -89,6 +107,8 @@ class DualCameraRecorder(Node):
             self.writer_r2_cam1.release()
         if self.writer_r2_cam2:
             self.writer_r2_cam2.release()
+        if self.writer_arena_cam:
+            self.writer_arena_cam.release()    
         super().destroy_node()
 
 
@@ -96,8 +116,9 @@ def main(args=None):
     rclpy.init(args=args)
 
     # Change these flags to control recording
-    record_r1 = False
+    record_r1 = True
     record_r2 = True
+    record_arena = True
 
     node = DualCameraRecorder(record_r1=record_r1, record_r2=record_r2)
     try:

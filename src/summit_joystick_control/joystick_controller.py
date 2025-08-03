@@ -43,7 +43,7 @@ class JoystickControl(Node):
         if self.enabled:
 
             twist.linear.x = self.linear_scale * axis_linear 
-            twist.angular.z = self.angular_scale * axis_angular 
+            twist.angular.z = -self.angular_scale * axis_angular 
 
             # Debug output
             self.get_logger().info(f"[ENABLED] Joy: lin={axis_linear:.2f} ang={axis_angular:.2f} → cmd_vel: x={twist.linear.x:.2f}, z={twist.angular.z:.2f}")

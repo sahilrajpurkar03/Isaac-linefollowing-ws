@@ -26,8 +26,8 @@ setup(
     entry_points={
         'console_scripts': [
             'joystick_controller = joystick_controller:main',   ## for manual control with joystick
-            'white_line_follower = line_follower.white_line_follower:main',  ## for white follow straight
-            'linefollow_task1 = line_follower.linefollow_task1:main',  # new sharp turn logic
+            'linefollow_robot1 = line_follower.LineFollowRobot1:main',
+            'linefollow_robot2 = line_follower.LineFollowRobot2:main',  # new sharp turn logic
         ],
     },
 )
