@@ -1,5 +1,0 @@
-[console_scripts]
-joystick_controller = joystick_controller:main
-linefollow_robot1 = line_follower.LineFollowRobot1:main
-linefollow_robot2 = line_follower.LineFollowRobot2:main
-
