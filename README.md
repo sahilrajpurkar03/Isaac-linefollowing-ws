@@ -27,11 +27,7 @@ cd src/summit_joystick_control
 python3 LineFollowRobot2.py
 ```
 
-### Reinforcement Learning Line Following
-```bash
-cd src/summit_joystick_control
-python3 LineFollowRobot1.py
-```
+### Reinforcement Learning Line Following(directory for RL training and model is not updated yet)
 
 ### Direct Velocity Control
 ```bash
