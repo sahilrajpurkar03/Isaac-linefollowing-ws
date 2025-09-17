@@ -1,4 +1,4 @@
-# Robocon-Lidar-ws
+# Isaac-Linefollowing-ws
 
 ![Image](doc/competition.gif)
 
