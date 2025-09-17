@@ -1,6 +1,6 @@
 # Isaac-Linefollowing-ws
 
-![Image](doc/competition.gif)
+![Image](competition.gif)
 
 **Robocon-Lidar-ws** is a virtual robotics racing simulation built using **Isaac Sim** and **ROS2**, inspired by the Robocon competition. Two **Robotnik Summit** robots race by following a white line path while avoiding obstacles.
 
