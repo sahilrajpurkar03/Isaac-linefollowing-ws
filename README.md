@@ -11,7 +11,6 @@
 - [Isaac Sim](https://developer.nvidia.com/isaac-sim)
 - ROS2 (Foxy or newer)
 - Python 3.8+
-- NVIDIA GPU (for Isaac Sim + RL training)
 - `ros2_control`, `joy`, and other ROS2 packages
 
 ## 🤖 Robot Control Commands
