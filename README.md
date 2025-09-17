@@ -4,11 +4,6 @@
 
 **Robocon-Lidar-ws** is a virtual robotics racing simulation built using **Isaac Sim** and **ROS2**, inspired by the Robocon competition. Two **Robotnik Summit** robots race by following a white line path while avoiding obstacles.
 
-- **Robot 1**: Uses **PID control** for line following.
-- **Robot 2**: Uses **Reinforcement Learning (RL)**, improving through trial and error.
-
-It’s a friendly race between classic control theory and intelligent learning. Who finishes first?
-
 > **Tip**: You can run your own control code on the robots! All sensors and ROS2 topics are ready—just change the logic and experiment.
 
 ## 📦 Requirements
@@ -26,8 +21,6 @@ It’s a friendly race between classic control theory and intelligent learning. 
 cd src/summit_joystick_control
 python3 LineFollowRobot2.py
 ```
-
-### Reinforcement Learning Line Following(directory for RL training and model is not updated yet)
 
 ### Direct Velocity Control
 ```bash
